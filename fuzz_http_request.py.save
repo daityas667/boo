@@ -1,0 +1,50 @@
+#!/usr/bin/env pytho# Designed for use with boofuzz v0.0.9
+from boofuzz import *
+
+
+def main():
+
+    start_cmd = ['./webserver', '']
+    session = Session(
+        target=Target(
+            connection=SocketConnection("127.0.0.1", 8888, proto='tcp'),
+            procmon=pedrpc.Client("127.0.0.1", 26002),
+            procmon_options={"start_commands": [start_cmd]}
+        ),
+    )
+
+    '''
+    HTTP Format:
+    GET / HTTP/1.1
+    Host: 127.0.0.1
+    User-Agent: Mozilla/5.0 (Macintosh; Intel Mac OS X 10.15; rv:81.0) Gecko/20100101 Firefox/81.0
+    Accept: text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*;q=0.8
+    Accept-Language: en-US,en;q=0.5
+    Accept-Encoding: gzip, deflate
+    Connection: keep-alive
+    Upgrade-Insecure-Requests: 1
+    '''
+
+    s_initialize(name="URI")
+    s_static("GET ", name='Method')
+    s_delim(" ", name='space-1')
+    s_string("/index.html", name='Request-URI')
+    s_static("\r\n", name="Request-Line-CRLF")
+
+
+
+
+    s_static("Host: 127.0.0.1\r\n")
+    s_static("User-Agent: Mozilla\r\n")
+    s_static("Accept: text/html\r\n")
+    s_static("Accept-Language: en-US,en;q=0.5\r\n")
+    s_static("Accept-Encoding: gzip, deflate\r\n")
+    s_static("Connection: keep-alive\r\n")
+    s_static("Upgrade-Insecure-Requests: 1\r\n")
+
+    session.connect(s_get("URI"))
+    session.fuzz()
+
+
+if __name__ == "__main__":
+    main()
